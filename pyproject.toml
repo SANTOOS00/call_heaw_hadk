@@ -1,10 +1,9 @@
 [project]
-name = "santoss"
+name = "call-me"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "basedpyright>=1.40.2",
-    "llm-sdk>=1.0.1",
+    "llm-sdk",
 ]
 
 [tool.uv.workspace]
@@ -13,4 +12,4 @@ members = [
 ]
 
 [tool.uv.sources]
-llm-sdk = { workspace = true, editable = true }
+llm-sdk = { workspace = true }
