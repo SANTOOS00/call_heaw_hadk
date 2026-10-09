@@ -5,6 +5,7 @@ from .model import Model
 
 import json
 import argparse
+from typing import Any
 
 class Json():
     def __init__(self) -> None:
@@ -25,18 +26,16 @@ class Json():
 
     def get_functions_definition(self) -> list[FunctionDefinition]:
         with open("data/input/functions_definition.json", 'r') as data:
-            functions_definition: list[dict[str, str]] = json.load(data)
+            functions_definition: list[dict[str, Any]] = json.load(data)
         return [FunctionDefinition(**fundefinition) for fundefinition in functions_definition]
 
     def get_prompts(self) -> list[Prompt]:
         with open("data/input/function_calling_tests.json", 'r') as data:
-            prompts:  dict[str, str] = json.load(data)
+            prompts: list[dict[str, str]] = json.load(data)
         return [Prompt(**prompt) for prompt in prompts]
 
 
-def create_prefixtrie(
-        functions_name_ids: list[list[int]]
-        ) -> PrefixTrie:
+def create_prefixtrie(functions_name_ids: list[list[int]]) -> PrefixTrie:
     trie = PrefixTrie()
     for token_ids in functions_name_ids:
         trie.set_trie(token_ids)
@@ -47,13 +46,15 @@ def main() -> None:
     data = Json()
     model = Model() 
     functions_definition = data.get_functions_definition()
-    print(type(functions_definition[0]))
 
     Generator(
-            trie=create_prefixtrie([model.encode(fun.name) for fun in functions_definition]),
+            model=model,
+            trie=create_prefixtrie([model.encode_string(fun.name)
+                                    for fun in functions_definition]),
             prompts=data.get_prompts(),
             functions_definition=data.get_functions_definition()
             ).run()
+
 
 if __name__ == "__main__":
     try:

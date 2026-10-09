@@ -1,4 +1,4 @@
-from typing import NewType
+from typing import NewType, cast
 
 
 FunctionName = NewType('FunctionName', str)
@@ -24,13 +24,14 @@ class PrefixTrie:
         root_node.is_finished = True
 
 
-    def get_children(self, tokens: list[int]) -> list[int]:
+    def git_childrens(self, tokens: list[int]) -> list[int]:
         root_node = self._root_node
+
         for id_token in tokens:
             if id_token not in root_node.node.keys():
                 return []
             root_node = root_node.node[id_token]
-        return [root_node.node.keys()]
+        return list(root_node.node.keys())
 
 
 
