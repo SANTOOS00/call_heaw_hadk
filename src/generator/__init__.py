@@ -19,7 +19,7 @@ class Generator:
 
     def run(self) -> None:
         for prompt in self.prompts:
-            fun_name: FunctionNameStr = self.function_name_generator.generator(user_prompt=prompt)
+            fun_name: FunctionNameStr = self.function_name_generator.generator(user_prompt=prompt.prompt)
             print(fun_name)
 
 
