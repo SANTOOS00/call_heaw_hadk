@@ -2,10 +2,10 @@ from typing import NewType
 
 
 PARAMETERS = NewType('PARAMETERS',
-                     dict[str, int | float | str | bool)
+                     dict[str, int | float | str | bool])
 
 
-class GeneratorParameter:
+class GeneratorParameters:
     def __init__(self)-> None:
         pass
 

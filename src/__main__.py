@@ -38,7 +38,6 @@ def create_prefixtrie(
         functions_name_ids: list[list[int]]
         ) -> PrefixTrie:
     trie = PrefixTrie()
-    print(functions_name_ids)
     for token_ids in functions_name_ids:
         trie.set_trie(token_ids)
     return trie
@@ -48,6 +47,8 @@ def main() -> None:
     data = Json()
     model = Model() 
     functions_definition = data.get_functions_definition()
+    print(type(functions_definition[0]))
+
     Generator(
             trie=create_prefixtrie([model.encode(fun.name) for fun in functions_definition]),
             prompts=data.get_prompts(),

@@ -3,7 +3,9 @@ name = "call-me"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "basedpyright>=1.40.2",
     "llm-sdk",
+    "pydantic>=2.14.0",
 ]
 
 [tool.uv.workspace]
