@@ -30,9 +30,19 @@ class Prompt(str, Enum):
         "parameters": {{PARAMETERS}"""
 
     @staticmethod
-    def builder_prompt(user_prompt: str) -> str:
+    def builder_prompt(user_prompt: str, function_definition: FunctionDefinition) -> str:
+        prototype: str = '('
+        for conut, (parameter, typearg) in enumerate(function_definition.parameters.items()):
+            prototype += f"\"{parameter}\": {typearg.type}"
+            if len(function_definition.parameters) > conut:
+                prototype += ','
+        prototype += ')'
         return Prompt.Prompt.value.replace(
                 "{USER_PROMPT}", user_prompt
+        ).replace(
+                "{DESCRIPTION}", function_definition.description
+        ).replace(
+                "{PROTOTYPE}", function_definition.name + prototype
         )
 
 class FSM:
@@ -60,10 +70,13 @@ class GeneratorParameters:
                   user_prompt: str) -> str:
         parameters: Paramerts = dict()
         model = self._model
-        prompt: str = Prompt.builder_prompt(user_prompt=user_prompt)
+        prompt: str = Prompt.builder_prompt(
+                user_prompt=user_prompt,
+                function_definition=function_definition)
         self._context_window = model.encode_string(
                 string=prompt
                 )
+        print(prompt)
         for parameter, typearg in function_definition.parameters.items():
             match typearg:
                 case "number":
