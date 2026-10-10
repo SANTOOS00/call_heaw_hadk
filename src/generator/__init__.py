@@ -1,9 +1,8 @@
 from .dataschema import FunctionDefinition, Prompt
 from ..prefixtrie import PrefixTrie
-from .generator_function_name import FunctionName, FunctionNameStr
-from .generator_parameters import GeneratorParameters
+from .generator_function_name import FunctionName, FunctionNameStr, FunctionDoc
+from .generator_parameters import GeneratorParameters, Parameters
 from ..model import Model
-
 
 import sys
 
@@ -16,22 +15,37 @@ class Generator:
         prompts: list[Prompt],
         functions_definition: list[FunctionDefinition]
     ) -> None:
+
         self.prompts: list[Prompt] = prompts
         self.functions_definition: list[FunctionDefinition] = functions_definition
         self.trie: PrefixTrie = trie
-        self.function_name_generator: FunctionName = FunctionName(
+        self._generator_function_name: FunctionName = FunctionName(
                 model=model,
                 trie=trie,
-                functions_doc=[{"name": fun.name, "description": fun.description} for fun in functions_definition])
+                functions_doc=self._get_doc(functions_definition)
+                )
+        self._generator_parameters: GeneratorParameters = GeneratorParameters()
+
     def run(self) -> None:
+        generator_name: FunctionName= self._generator_function_name
+        generator_parameters: GeneratorParameters= self._generator_parameters
+
         for prompt in self.prompts:
-            fun_name: FunctionNameStr = self.function_name_generator.generator(user_prompt=prompt.prompt)
+            fun_name: FunctionNameStr = generator_name.generator(
+                    user_prompt=prompt.prompt
+                    )
             fun_def: FunctionDefinition | None= self.get_function_definition(
                     function_name=fun_name)
             if fun_def is None:
-                print(f"[ERROR]: No tool definition matches the user prompt '{prompt.prompt}'", file=sys.stderr)
+                print(f"[ERROR]: No tool definition matches the "
+                      f"user prompt '{prompt.prompt}'", file=sys.stderr)
                 sys.exit(1)
-            print(fun_def)
+            print(fun_name)
+            parameters: Parameters = generator_parameters.generator(function_definition=fun_def)
+            print(parameters)
+
+    def _get_doc(self, functions_definition: list[FunctionDefinition]) -> FunctionDoc:
+        return [{"name": fun.name, "description": fun.description} for fun in functions_definition]
 
     def get_function_definition(
             self,

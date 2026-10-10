@@ -8,8 +8,9 @@ import numpy as nu
 
 
 FunctionNameStr: NewType = NewType("FunctionNameStr", str)
-FunctionDoc:  TypeAlias = dict[str, str]
 TokenID: NewType = NewType("TokenID", int)
+
+FunctionDoc:  TypeAlias = dict[str, str]
 Score: TypeAlias = float
 
 
@@ -66,5 +67,5 @@ class FunctionName:
 
         return model.decode(token_valid)
 
-__all__ = ["FunctionName", "FunctionNameStr"]
+__all__ = ["FunctionName", "FunctionNameStr", "FunctionDoc"]
 
