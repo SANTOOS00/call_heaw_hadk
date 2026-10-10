@@ -27,7 +27,8 @@ class Prompt(str, Enum):
         "prototype": "{PROTOTYPE}",
         "user_prompt": "{USER_PROMPT}"
         "description": "{DESCRIPTION}",
-        "parameters": {{PARAMETERS}"""
+        "parameters": {
+            """
 
     @staticmethod
     def builder_prompt(user_prompt: str, function_definition: FunctionDefinition) -> str:
@@ -46,12 +47,37 @@ class Prompt(str, Enum):
         )
 
 class FSM:
+    class StateNumber(Enum):
+        START
+        DECIMAL
+        INTEGER
+        SIGN
+        END
+
+    class StateString(Enum):
+        pass
+
     def __init__(self) -> None:
         ...
 
-    def get_step_number(self) -> float | int:
-        pass 
-
+    def get_state_number(self, number: str) -> float | int:
+        state: FSM.StateNumber = FSM.StateNumber.START
+        states: FSM.StateNumber = FSM.StateNumber
+        for ch in number:
+            match state:
+                case states.START:
+                    if ch in "-+":
+                        state = states.SING
+                    else:
+                        state = states.DECIMAL
+                case states.SING:
+                        state = states.DECIMAL
+                case states.DECIMAL:
+                    if ch == '.':
+                        state = states.
+                    else ch == ',':
+                        return states.END
+                case 
     def get_step_string(self) -> str:
         pass
 
@@ -76,9 +102,13 @@ class GeneratorParameters:
         self._context_window = model.encode_string(
                 string=prompt
                 )
-        print(prompt)
-        for parameter, typearg in function_definition.parameters.items():
-            match typearg:
+        for count, (parameter, typearg) in enumerate(function_definition.parameters.items()):
+            if count == 0:
+                self._context_window += model.encode_string(f"\"{parameter}\": ")
+            else:
+                self._context_window += model.encode_string(f", \"{parameter}\": ")
+
+            match typearg.type:
                 case "number":
                     parameters['number'] = self._number()
                 case "integer":
@@ -86,8 +116,30 @@ class GeneratorParameters:
                 case _:
                     pass
 
+    
     def _number(self) -> float:
-        pass
+        model: Model = self._model
+        token_valid: list[TokenID] = []
+        while True:
+            token_possible: list[int] = self._get_token_possible_for_numbers(
+                    token_valid=token_valid
+                    )
+            if len(token_possible) == 0:
+                break
 
+    def _get_token_possible_for_numbers(self, number: str) -> list[int]:
+        fsm: FSM = self._fsm
+        state: FSM.StateNumber = fsm.get_state_numbers(
+                number=number
+                )
+        match state:
+            case FSM.StateNumber.START:
+                return self._model.encode_byt_byt("+-0123456789")
+            case FSM.StateNumber.DEACIMAL:
+                return self._model.encode_byt_byt("0123456789")
+            case FSM.StateNumber.INTEGER:
+                return self._model.encode_byt_byt("0123456789,.")
+            case FSM.StateNumber.END:
+                return []
 __all__ = ["GeneratorParameters", "Paramters"]
 
