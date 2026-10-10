@@ -24,7 +24,9 @@ class Generator:
                 trie=trie,
                 functions_doc=self._get_doc(functions_definition)
                 )
-        self._generator_parameters: GeneratorParameters = GeneratorParameters()
+        self._generator_parameters: GeneratorParameters = GeneratorParameters(
+                model=model
+                )
 
     def run(self) -> None:
         generator_name: FunctionName= self._generator_function_name
@@ -41,7 +43,8 @@ class Generator:
                       f"user prompt '{prompt.prompt}'", file=sys.stderr)
                 sys.exit(1)
             print(fun_name)
-            parameters: Parameters = generator_parameters.generator(function_definition=fun_def)
+            parameters: Parameters = generator_parameters.generator(function_definition=fun_def,
+                                                                    user_prompt=prompt.prompt)
             print(parameters)
 
     def _get_doc(self, functions_definition: list[FunctionDefinition]) -> FunctionDoc:

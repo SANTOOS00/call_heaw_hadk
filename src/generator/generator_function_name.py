@@ -28,7 +28,6 @@ FUNCTION NAME:"""
             user_prompt: str,
             functions_doc: list[FunctionDoc]
             ) -> str:
-        docs = {}
         return Prompt.Prompt_Function_Name\
                 .value.replace(
                 "{USER_PROMPT}", user_prompt
@@ -50,7 +49,7 @@ class FunctionName:
         model: Model = self._model
 
         prompt: str = Prompt.builder_prompt(
-                user_prompt,
+                user_prompt=user_prompt,
                 functions_doc=self._function_doc)
         context_window: list[TokenID] = model.encode_string(prompt)
         token_valid: list[TokenID] = []
