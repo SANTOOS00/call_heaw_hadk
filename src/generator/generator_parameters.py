@@ -50,17 +50,17 @@ class Prompt(str, Enum):
 
 class FSM:
     class StateNumber(Enum):
-        START = "Start Part"
-        SIGN = "Sign Part"
-        DECIMAL = "Decimal Part"
-        FRACTIONAL = "Fractional Part"
+        START = "Start Cell"
+        SIGN = "Sign Cell"
+        DECIMAL = "Decimal Cell"
+        FRACTIONAL = "Fractional Cell"
         END = "End Part"
 
     class StateString(Enum):
-        pass
-
-    def __init__(self) -> None:
-        ...
+        START = "Start Cell"
+        ESCAPE = "Escape Cell"
+        CONTEXT = "Context Cell"
+        END = "End Cell"
 
     def get_state_number(self, number: str) -> StateNumber:
         state: self.StateNumber = self.StateNumber.START
@@ -88,8 +88,25 @@ class FSM:
         return state
 
 
-    def get_step_string(self) -> str:
-        pass
+    def get_state_string(self, string: str) -> StateString:
+        state: self.StateNumber.START
+        for ch in string:
+            match state:
+                case self.StateString.START:
+                    if "\\":
+                        state = self.StateString.ESCAPE
+                    elif '"':
+                        state = self.StateString.CONTEXT
+                case self.StateString.ESCAPE:
+                    state = self.StateString.CONTEXT
+                case self.StateString.CONTEXT:
+                    if "\\":
+                        state = self.StateString.ESCAPE
+                    if '"':
+                        state = self.StateString.END
+                case self.StateString.END:
+                    return self.StateString.END
+        return state
 
 
     def get_step_boolean(self) -> bool:
@@ -113,27 +130,36 @@ class GeneratorParameters:
                 string=prompt
                 )
         for count, (parameter, typearg) in enumerate(function_definition.parameters.items()):
-            self._context_window += model.encode_string(f"\"{parameter}\": ")
-
+            self._context_window += model.encode_string(
+                    f"\"{parameter}\": "
+                    )
             match typearg.type:
                 case "number":
                     parameters['number'] = self._number()
                 case "integer":
                     parameters['integer'] = int(self._number())
-                case _:
-                    pass
+                case "string":
+                    parameters['string'] = self._string()
+                case "boolean":
+                    parameters['boolean'] = self._boolean()
             print(model.decode(self._context_window))
 
-    
+    def _string(self) -> str:
+       print(self._fsm._get_state_string("\"hamid\""))
+       return "santoos "
+
+    def boolean(self) -> bool:
+       pass
+
     def _number(self) -> float:
         model: Model = self._model
         token_valid: list[TokenID] = []
         fsm: FSM = self._fsm
         while True:
-            token_possible: list[int] = self._get_token_possible_for_number(
+            token_possible: list[int] | None = self._get_token_possible_for_number(
                     number=self._model.decode(token_valid)
                     )
-            if len(token_possible) == 0:
+            if token_possible is None:
                break 
             logits: list[Score] = model.mask_logits(
                     token_possible=token_possible,
@@ -144,16 +170,13 @@ class GeneratorParameters:
                     token_id=token
                     )
             token_valid.append(token)
-            state_fsm: FSM.StateNumber = fsm.get_state_number(model.decode(token_valid))
-            if FSM.StateNumber.END == state_fsm:
-                break
 
         return float(model.decode(token_valid).rstrip(","))
 
     def _add_token_in_window_context(self, token_id: TokenID) -> None:
         self._context_window.append(token_id)
 
-    def _get_token_possible_for_number(self, number: str) -> list[int]:
+    def _get_token_possible_for_number(self, number: str) -> list[int] | None:
         fsm: FSM = self._fsm
         state: FSM.StateNumber = fsm.get_state_number(
                 number=number
@@ -168,10 +191,10 @@ class GeneratorParameters:
             case FSM.StateNumber.SIGN:
                 return self._mode.encode_char_char("0123456789")
             case FSM.StateNumber.END:
-                return []
+                return None
             case _:
                 pass
-        return []
+        return None
 
 __all__ = ["GeneratorParameters", "Paramters"]
 
