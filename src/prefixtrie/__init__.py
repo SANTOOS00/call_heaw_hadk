@@ -16,6 +16,7 @@ class PrefixTrie:
 
 
     def set_trie(self, token_ids: list[int]) -> None:
+        print(token_ids)
         root_node: Node = self._root_node
         for id_token in token_ids:
             if id_token not in root_node.node.keys():

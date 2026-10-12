@@ -1,6 +1,11 @@
 from llm_sdk import Small_LLM_Model
 
 
+from typing import NewType
+
+
+TokenID: NewType = NewType("TokenID", int)
+
 class Model(Small_LLM_Model):
     def encode_string(self, string: str) -> list[int]:
         return [int(token_id) for token_id in super().encode(string)[0]]
@@ -12,7 +17,10 @@ class Model(Small_LLM_Model):
                 logits[token_id] = float('-inf')
         return logits
 
-
-
+    def encode_char_char(self, token_str: str) -> list[TokenID]:
+        tokens: list[TokenID] = []
+        for char in token_str:
+            tokens.append(TokenID(self.encode(char)[0]))
+        return tokens
 
 __all__ = ["Model"]

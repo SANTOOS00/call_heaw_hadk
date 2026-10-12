@@ -1,12 +1,14 @@
 from .dataschema import FunctionDefinition 
 from ..model import Model
 from typing import NewType, TypeAlias
-from enum import Enum
+import numpy as nu
+from enum import Enum, auto
 
 Parameters = NewType('PARAMETERS',
                      dict[str, int | float | str | bool])
 TokenID: TypeAlias = int
 
+Score: TypeAlias = float
 
 
 
@@ -48,11 +50,11 @@ class Prompt(str, Enum):
 
 class FSM:
     class StateNumber(Enum):
-        START
-        DECIMAL
-        INTEGER
-        SIGN
-        END
+        START = "Start Part"
+        SIGN = "Sign Part"
+        DECIMAL = "Decimal Part"
+        FRACTIONAL = "Fractional Part"
+        END = "End Part"
 
     class StateString(Enum):
         pass
@@ -60,24 +62,32 @@ class FSM:
     def __init__(self) -> None:
         ...
 
-    def get_state_number(self, number: str) -> float | int:
-        state: FSM.StateNumber = FSM.StateNumber.START
-        states: FSM.StateNumber = FSM.StateNumber
+    def get_state_number(self, number: str) -> StateNumber:
+        state: self.StateNumber = self.StateNumber.START
         for ch in number:
             match state:
-                case states.START:
+                case self.StateNumber.START:
                     if ch in "-+":
-                        state = states.SING
+                        state = self.StateNumber.SIGN
                     else:
-                        state = states.DECIMAL
-                case states.SING:
-                        state = states.DECIMAL
-                case states.DECIMAL:
+                        state = self.StateNumber.DECIMAL
+                case self.StateNumber.SIGN:
+                    state = self.StateNumber.DECIMAL
+                case self.StateNumber.DECIMAL:
                     if ch == '.':
-                        state = states.
-                    else ch == ',':
-                        return states.END
-                case 
+                        state = self.StateNumber.FRACTIONAL
+                    elif ch == ',':
+                        state = self.StateNumber.END
+                    else:
+                        pass
+                case self.StateNumber.FRACTIONAL:
+                    if ch == ',':
+                        state = self.StateNumber.END
+                case self.StateNumber.END:
+                    return state
+        return state
+
+
     def get_step_string(self) -> str:
         pass
 
@@ -103,10 +113,7 @@ class GeneratorParameters:
                 string=prompt
                 )
         for count, (parameter, typearg) in enumerate(function_definition.parameters.items()):
-            if count == 0:
-                self._context_window += model.encode_string(f"\"{parameter}\": ")
-            else:
-                self._context_window += model.encode_string(f", \"{parameter}\": ")
+            self._context_window += model.encode_string(f"\"{parameter}\": ")
 
             match typearg.type:
                 case "number":
@@ -115,31 +122,56 @@ class GeneratorParameters:
                     parameters['integer'] = int(self._number())
                 case _:
                     pass
+            print(model.decode(self._context_window))
 
     
     def _number(self) -> float:
         model: Model = self._model
         token_valid: list[TokenID] = []
+        fsm: FSM = self._fsm
         while True:
-            token_possible: list[int] = self._get_token_possible_for_numbers(
-                    token_valid=token_valid
+            token_possible: list[int] = self._get_token_possible_for_number(
+                    number=self._model.decode(token_valid)
                     )
             if len(token_possible) == 0:
+               break 
+            logits: list[Score] = model.mask_logits(
+                    token_possible=token_possible,
+                    window_context=self._context_window
+                    )
+            token: TokenID = nu.argmax(logits)
+            self._add_token_in_window_context(
+                    token_id=token
+                    )
+            token_valid.append(token)
+            state_fsm: FSM.StateNumber = fsm.get_state_number(model.decode(token_valid))
+            if FSM.StateNumber.END == state_fsm:
                 break
 
-    def _get_token_possible_for_numbers(self, number: str) -> list[int]:
+        return float(model.decode(token_valid).rstrip(","))
+
+    def _add_token_in_window_context(self, token_id: TokenID) -> None:
+        self._context_window.append(token_id)
+
+    def _get_token_possible_for_number(self, number: str) -> list[int]:
         fsm: FSM = self._fsm
-        state: FSM.StateNumber = fsm.get_state_numbers(
+        state: FSM.StateNumber = fsm.get_state_number(
                 number=number
                 )
         match state:
             case FSM.StateNumber.START:
-                return self._model.encode_byt_byt("+-0123456789")
-            case FSM.StateNumber.DEACIMAL:
-                return self._model.encode_byt_byt("0123456789")
-            case FSM.StateNumber.INTEGER:
-                return self._model.encode_byt_byt("0123456789,.")
+                return self._model.encode_char_char("+-0123456789")
+            case FSM.StateNumber.DECIMAL:
+                return self._model.encode_char_char("0123456789.,")
+            case FSM.StateNumber.FRACTIONAL:
+                return self._model.encode_char_char("0123456789,")
+            case FSM.StateNumber.SIGN:
+                return self._mode.encode_char_char("0123456789")
             case FSM.StateNumber.END:
                 return []
+            case _:
+                pass
+        return []
+
 __all__ = ["GeneratorParameters", "Paramters"]
 
