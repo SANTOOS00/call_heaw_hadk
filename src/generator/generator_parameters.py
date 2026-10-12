@@ -4,12 +4,11 @@ from typing import NewType, TypeAlias
 import numpy as nu
 from enum import Enum, auto
 
+
 Parameters = NewType('PARAMETERS',
                      dict[str, int | float | str | bool])
-TokenID: TypeAlias = int
-
+TokenID: NewType = int
 Score: TypeAlias = float
-
 
 
 class Prompt(str, Enum):
@@ -24,6 +23,15 @@ class Prompt(str, Enum):
             "b": 3.0
             }
     }
+   example: {
+        "prompt": "Greet john",
+        "function_prototype": "fn_greet(name: string)",
+        "function_description": "Generate a greeting message for a\
+            person by name.",
+        "parameters": {
+            "name": "john",
+            }
+    } 
     output:
     {
         "prototype": "{PROTOTYPE}",
@@ -63,7 +71,7 @@ class FSM:
         END = "End Cell"
 
     def get_state_number(self, number: str) -> StateNumber:
-        state: self.StateNumber = self.StateNumber.START
+        state: FSM.StateNumber = self.StateNumber.START
         for ch in number:
             match state:
                 case self.StateNumber.START:
@@ -87,23 +95,22 @@ class FSM:
                     return state
         return state
 
-
     def get_state_string(self, string: str) -> StateString:
-        state: self.StateNumber.START
+        state: FSM.StateString = self.StateString.START
         for ch in string:
             match state:
                 case self.StateString.START:
-                    if "\\":
+                    if ch == "\\":
                         state = self.StateString.ESCAPE
-                    elif '"':
+                    elif ch == '"':
                         state = self.StateString.CONTEXT
                 case self.StateString.ESCAPE:
                     state = self.StateString.CONTEXT
                 case self.StateString.CONTEXT:
-                    if "\\":
+                    if ch == '"':
+                        return self.StateString.END
+                    elif ch == "\\":
                         state = self.StateString.ESCAPE
-                    if '"':
-                        state = self.StateString.END
                 case self.StateString.END:
                     return self.StateString.END
         return state
@@ -142,22 +149,35 @@ class GeneratorParameters:
                     parameters['string'] = self._string()
                 case "boolean":
                     parameters['boolean'] = self._boolean()
-            print(model.decode(self._context_window))
 
     def _string(self) -> str:
-       print(self._fsm._get_state_string("\"hamid\""))
-       return "santoos "
+        model: Model = self._model
+        tokens_generator: list[TokenID] = []
+        fsm: FSM = self._fsm
+        while True:
+            logits: list[Score] = model.get_logits_from_input_ids(self._context_window)
+            token: TokenID = TokenID(nu.argmax(logits))
+            tokens_generator.append(token)
+            print(model.decode([token]))
+            self._add_token_in_window_context(token)
+            state: FSM.StateString = fsm.get_state_string(
+                    string=model.decode(tokens_generator)
+                    )
+            if FSM.StateString.END == state:
+                break
+        print(model.decode(tokens_generator))
+        return "santoos "
 
     def boolean(self) -> bool:
        pass
 
     def _number(self) -> float:
         model: Model = self._model
-        token_valid: list[TokenID] = []
+        tokens_generator: list[TokenID] = []
         fsm: FSM = self._fsm
         while True:
             token_possible: list[int] | None = self._get_token_possible_for_number(
-                    number=self._model.decode(token_valid)
+                    number=self._model.decode(tokens_generator)
                     )
             if token_possible is None:
                break 
@@ -169,12 +189,11 @@ class GeneratorParameters:
             self._add_token_in_window_context(
                     token_id=token
                     )
-            token_valid.append(token)
+            tokens_generator.append(token)
 
-        return float(model.decode(token_valid).rstrip(","))
+        return float(model.decode(tokens_generator).rstrip(","))
 
-    def _add_token_in_window_context(self, token_id: TokenID) -> None:
-        self._context_window.append(token_id)
+    def _add_token_in_window_context(self, token_id: TokenID) -> None: self._context_window.append(token_id)
 
     def _get_token_possible_for_number(self, number: str) -> list[int] | None:
         fsm: FSM = self._fsm
