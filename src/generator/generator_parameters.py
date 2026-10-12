@@ -5,7 +5,7 @@ import numpy as nu
 from enum import Enum, auto
 
 
-Parameters = NewType('PARAMETERS',
+Parameters: NewType = NewType('PARAMETERS',
                      dict[str, int | float | str | bool])
 TokenID: NewType = int
 Score: TypeAlias = float
@@ -127,8 +127,8 @@ class GeneratorParameters:
 
     def generator(self,
                   function_definition: FunctionDefinition,
-                  user_prompt: str) -> str:
-        parameters: Paramerts = dict()
+                  user_prompt: str) -> Parameters:
+        parameters: Paramerts = {}
         model = self._model
         prompt: str = Prompt.builder_prompt(
                 user_prompt=user_prompt,
@@ -137,19 +137,21 @@ class GeneratorParameters:
                 string=prompt
                 )
         for count, (parameter, typearg) in enumerate(function_definition.parameters.items()):
-            self._context_window += model.encode_string(
-                    f"\"{parameter}\": "
+            self._set_token_name_arg(
+                    parameter=parameter,
+                    number_parameters=len(function_definition.parameters)
                     )
             match typearg.type:
                 case "number":
-                    parameters['number'] = self._number()
+                    parameters[parameter] = self._number()
                 case "integer":
-                    parameters['integer'] = int(self._number())
+                    parameters[parameter] = int(self._number())
                 case "string":
-                    parameters['string'] = self._string()
+                    parameters[parameter] = self._string()
                 case "boolean":
-                    parameters['boolean'] = self._boolean()
-
+                    parameters[parameter] = self._boolean()
+            print(parameters)
+        return parameters
     def _string(self) -> str:
         model: Model = self._model
         tokens_generator: list[TokenID] = []
@@ -158,15 +160,13 @@ class GeneratorParameters:
             logits: list[Score] = model.get_logits_from_input_ids(self._context_window)
             token: TokenID = TokenID(nu.argmax(logits))
             tokens_generator.append(token)
-            print(model.decode([token]))
             self._add_token_in_window_context(token)
             state: FSM.StateString = fsm.get_state_string(
                     string=model.decode(tokens_generator)
                     )
             if FSM.StateString.END == state:
                 break
-        print(model.decode(tokens_generator))
-        return "santoos "
+        return model.decode(tokens_generator)
 
     def boolean(self) -> bool:
        pass
@@ -193,7 +193,25 @@ class GeneratorParameters:
 
         return float(model.decode(tokens_generator).rstrip(","))
 
-    def _add_token_in_window_context(self, token_id: TokenID) -> None: self._context_window.append(token_id)
+    def _add_token_in_window_context(
+            self,
+            token_id: TokenID
+            ) -> None: 
+        self._context_window.append(token_id)
+    
+    def _set_token_name_arg(
+            self,    
+            parameter: str,
+            number_parameters: int
+            ) -> None:
+            if number_parameters == 0:
+                self._context_window += self._model.encode_string( 
+                        f"\"{parameter}\": "
+                        )        
+            else:
+                self._context_window += self._model.encode_string(
+                        f" \"{parameter}\": " 
+                        )
 
     def _get_token_possible_for_number(self, number: str) -> list[int] | None:
         fsm: FSM = self._fsm
