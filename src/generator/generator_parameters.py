@@ -100,19 +100,14 @@ class FSM:
         for ch in string:
             match state:
                 case self.StateString.START:
-                    if ch == "\\":
-                        state = self.StateString.ESCAPE
+                    if ch == '\\':
+                        print('ssssss')
+                        state = sefl.StateString.ESCAPE
                     elif ch == '"':
                         state = self.StateString.CONTEXT
-                case self.StateString.ESCAPE:
-                    state = self.StateString.CONTEXT
                 case self.StateString.CONTEXT:
                     if ch == '"':
                         return self.StateString.END
-                    elif ch == "\\":
-                        state = self.StateString.ESCAPE
-                case self.StateString.END:
-                    return self.StateString.END
         return state
 
 
@@ -161,12 +156,19 @@ class GeneratorParameters:
             token: TokenID = TokenID(nu.argmax(logits))
             tokens_generator.append(token)
             self._add_token_in_window_context(token)
+            tokens_string: str = model.decode(tokens_generator)
             state: FSM.StateString = fsm.get_state_string(
-                    string=model.decode(tokens_generator)
+                    string=tokens_string
                     )
+            
             if FSM.StateString.END == state:
+                if '"' in tokens_string:
+                    index = tokens_string.index('"')
+                    tokens_string = tokens_string[index + 1:]
+                    index = tokens_string.index('"')
+                    tokens_string = tokens_string[:index]
                 break
-        return model.decode(tokens_generator)
+        return tokens_string
 
     def boolean(self) -> bool:
        pass
@@ -220,17 +222,15 @@ class GeneratorParameters:
                 )
         match state:
             case FSM.StateNumber.START:
-                return self._model.encode_char_char("+-0123456789")
+                return self._model.encode_char_char("+-")
             case FSM.StateNumber.DECIMAL:
                 return self._model.encode_char_char("0123456789.,")
             case FSM.StateNumber.FRACTIONAL:
                 return self._model.encode_char_char("0123456789,")
             case FSM.StateNumber.SIGN:
-                return self._mode.encode_char_char("0123456789")
+                return self._model.encode_char_char("0123456789")
             case FSM.StateNumber.END:
                 return None
-            case _:
-                pass
         return None
 
 __all__ = ["GeneratorParameters", "Paramters"]

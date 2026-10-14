@@ -45,8 +45,9 @@ class Generator:
             print(fun_name)
             parameters: Parameters = generator_parameters.generator(function_definition=fun_def,
                                                                     user_prompt=prompt.prompt)
-            print(parameters)
-
+            import json 
+            with open('file.json', 'w') as fb:
+                json.dump(parameters, fb)
     def _get_doc(self, functions_definition: list[FunctionDefinition]) -> FunctionDoc:
         return [{"name": fun.name, "description": fun.description} for fun in functions_definition]
 
