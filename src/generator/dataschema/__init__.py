@@ -21,4 +21,3 @@ class Prompt(BaseModel):
 
 __all__ = ["FunctionDefinition", "Prompt"]
 
-

@@ -1,15 +1,16 @@
 from .generator import Generator, FunctionDefinition, Prompt
-from .prefixtrie import PrefixTrie
 from .model import Model
 
 
 from pydantic import TypeAdapter, ValidationError
-from typing import TypeVar, cast
+from typing import cast
 from pathlib import Path
 from argparse import ArgumentParser, Namespace
 
 
-T = TypeVar('T')
+AdapterFunctionDefinition = TypeAdapter(list[FunctionDefinition])
+AdapterPrompt = TypeAdapter(list[Prompt])
+
 
 class ParserError(Exception):
     ...
@@ -45,13 +46,12 @@ def get_functionsdefinition(
         path: Path,
         ) -> list[FunctionDefinition]:
     try:
-        with path.open() as fp:
-            adapter: TypeAdapter[list[FunctionDefinition]] = TypeAdapter(list[FunctionDefinition])
-            
-            return adapter.validate_json(fp.read())
-
+        with path.open() as fp:   
+            return AdapterFunctionDefinition.validate_json(fp.read())
     except:
-        pass
+        raise ParserError(
+                ""
+                )
 
 
 def get_prompts(
@@ -63,20 +63,23 @@ def get_prompts(
             return adapter.validate_json(fp.read())
 
     except ValidationError:
-        pass
+        raise ParserError(
+                ""
+                )
 
 
 def main() -> None:
     model: Model = Model()
     args: Namespace = get_args()
-    
 
     _ = Generator(
             model=model,
-            trie=PrefixTrie(),
-            functions_definition=get_functionsdefinition(
-                path=Path(cast(str, args.functions_definition))),
-            prompts=None
+            prompts=get_prompts(
+                path=Path(cast(str, args.ouput))
+                ),
+            functions_definition= get_functionsdefinition(
+                    path=Path(cast(str, args.functions_definition)
+                              )),
                 ).run()
 
 

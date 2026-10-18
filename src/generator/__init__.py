@@ -11,17 +11,17 @@ class Generator:
     def __init__(
         self,
         model: Model,
-        trie: PrefixTrie,
         prompts: list[Prompt],
         functions_definition: list[FunctionDefinition]
     ) -> None:
 
         self.prompts: list[Prompt] = prompts
         self.functions_definition: list[FunctionDefinition] = functions_definition
-        self.trie: PrefixTrie = trie
         self._generator_function_name: FunctionName = FunctionName(
                 model=model,
-                trie=trie,
+                trie=PrefixTrie.insert_many(
+                    [model.encode_string(fun.name) for fun in functions_definition]
+                    ),
                 functions_doc=self._get_doc(functions_definition)
                 )
         self._generator_parameters: GeneratorParameters = GeneratorParameters(
@@ -40,13 +40,14 @@ class Generator:
             fun_def: FunctionDefinition | None= self.get_function_definition(
                     function_name=fun_name)
             if fun_def is None:
-                print("[ERROR]: No tool definition matches the "
-                      f"user prompt '{prompt.prompt}'", file=sys.stderr)
+                print('[ERROR]: No tool definition matches the '
+                      f'user prompt "{prompt.prompt}"', file=sys.stderr)
                 sys.exit(1)
             parameters: Parameters = generator_parameters.generator(
                     function_definition=fun_def,
                     user_prompt=prompt.prompt)
-    
+            print(parameters)
+
     def _get_doc(
             self,
             functions_definition: list[FunctionDefinition]

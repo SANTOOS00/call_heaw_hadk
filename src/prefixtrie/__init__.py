@@ -14,7 +14,6 @@ class PrefixTrie:
     def __init__(self) -> None:
         self._root_node: Node = Node()
 
-
     def _insert(self, token_ids: list[int]) -> None:
         root_node: Node = self._root_node
         for id_token in token_ids:
@@ -22,7 +21,6 @@ class PrefixTrie:
                 root_node.node[id_token] = Node()
             root_node = root_node.node[id_token]
         root_node.is_finished = True
-
 
     def git_childrens(self, tokens: list[int]) -> list[int]:
         root_node = self._root_node
