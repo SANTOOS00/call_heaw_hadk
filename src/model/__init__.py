@@ -1,10 +1,10 @@
 from llm_sdk import Small_LLM_Model
 
 
-from typing import NewType
+from typing import TypeAlias
 
 
-TokenID: NewType = NewType("TokenID", int)
+TokenID: TypeAlias = int
 
 class Model(Small_LLM_Model):
     def encode_string(self, string: str) -> list[int]:

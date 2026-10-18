@@ -1,1 +1,1 @@
-{"a": -2.0, "b": 3.0}
+{"source_string": "The cat sat on the mat with another cat", "regex": "cat", "replacement": "dog"}

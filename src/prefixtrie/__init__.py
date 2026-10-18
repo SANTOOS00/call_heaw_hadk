@@ -1,4 +1,4 @@
-from typing import NewType, cast
+from typing import NewType, Self
 
 
 FunctionName = NewType('FunctionName', str)
@@ -7,16 +7,15 @@ FunctionName = NewType('FunctionName', str)
 class Node:
     def __init__(self) -> None:
         self.node: dict[int, Node] = dict()
-        self.is_finished = False
+        self.is_finished: bool = False
 
 
 class PrefixTrie:
     def __init__(self) -> None:
-        self._root_node = Node()
+        self._root_node: Node = Node()
 
 
-    def set_trie(self, token_ids: list[int]) -> None:
-        print(token_ids)
+    def _insert(self, token_ids: list[int]) -> None:
         root_node: Node = self._root_node
         for id_token in token_ids:
             if id_token not in root_node.node.keys():
@@ -34,9 +33,14 @@ class PrefixTrie:
             root_node = root_node.node[id_token]
         return list(root_node.node.keys())
 
-
-
-
+    @classmethod
+    def insert_many(cls, tokens_ids: list[list[int]]) -> Self:
+        instance = cls()
+        for ids in tokens_ids:
+            instance._insert(
+                    token_ids=ids
+                    )
+        return instance
 
 
 __all__ = ["PrefixTrie"]

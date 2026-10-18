@@ -2,13 +2,13 @@ from ..prefixtrie import PrefixTrie
 from ..model import Model
 
 
-from typing import TypeAlias, NewType
+from typing import TypeAlias
 from enum import Enum
 import numpy as nu
 
 
-FunctionNameStr: NewType = NewType("FunctionNameStr", str)
-TokenID: NewType = NewType("TokenID", int)
+FunctionNameStr: TypeAlias = str
+TokenID: TypeAlias = int
 
 FunctionDoc:  TypeAlias = dict[str, str]
 Score: TypeAlias = float
@@ -60,7 +60,7 @@ class FunctionName:
             logits: list[Score] = model.mask_logits(
                     tokens_possible, context_window
                     )
-            token: TokenID = nu.argmax(logits)
+            token: TokenID = TokenID(nu.argmax(logits))
             token_valid.append(token)
             context_window.append(token)
 

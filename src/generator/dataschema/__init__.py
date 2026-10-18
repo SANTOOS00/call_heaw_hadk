@@ -1,8 +1,8 @@
-from typing import NewType
+from typing import TypeAlias
 from pydantic import BaseModel
 
 
-TypeArgs = NewType("TypeArgs", int | float | bool | str)
+TypeArgs: TypeAlias = int | float | bool | str
 
 
 class Type(BaseModel):

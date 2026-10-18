@@ -1,50 +1,85 @@
-from .error import CallError
 from .generator import Generator, FunctionDefinition, Prompt
 from .prefixtrie import PrefixTrie
 from .model import Model
 
-import json
-from typing import Any
+
+from pydantic import TypeAdapter, ValidationError
+from typing import TypeVar, cast
+from pathlib import Path
+from argparse import ArgumentParser, Namespace
 
 
+T = TypeVar('T')
 
-def paraser() -> None:
-    pass
-
-def get_functions_definition() -> list[FunctionDefinition]:
-    with open("data/input/functions_definition.json", 'r') as data:
-        functions_definition: list[dict[str, Any]] = json.load(data)
-    return [FunctionDefinition(**fundefinition) for fundefinition in functions_definition]
-
-def get_prompts() -> list[Prompt]:
-    with open("data/input/function_calling_tests.json", 'r') as data:
-        prompts: list[dict[str, str]] = json.load(data)
-    return [Prompt(**prompt) for prompt in prompts]
+class ParserError(Exception):
+    ...
 
 
-def create_prefixtrie(functions_name_ids: list[list[int]]) -> PrefixTrie:
-    trie = PrefixTrie()
-    for token_ids in functions_name_ids:
-        trie.set_trie(token_ids)
-    return trie
+def valid_path(arg_path: str) -> None:
+    path: Path = Path(arg_path)
+    if path.exists():
+        raise ParserError(
+                f"[ERROR]: path is not valid {arg_path}"
+                )
+
+
+def get_args() -> Namespace:
+    parser = ArgumentParser()
+
+    _ = parser.add_argument(
+            "--functions_definition",
+            type=valid_path,
+            )
+    _ = parser.add_argument(
+            "--input",
+            type=valid_path,
+            )
+    _ = parser.add_argument(
+            "--output",
+            type=valid_path,
+            )
+    return parser.parse_args()
+
+
+def get_functionsdefinition(
+        path: Path,
+        ) -> list[FunctionDefinition]:
+    try:
+        with path.open() as fp:
+            adapter: TypeAdapter[list[FunctionDefinition]] = TypeAdapter(list[FunctionDefinition])
+            
+            return adapter.validate_json(fp.read())
+
+    except:
+        pass
+
+
+def get_prompts(
+        path: Path
+        ) -> list[Prompt]:
+    try:  
+        with path.open() as fp:
+            adapter: TypeAdapter[list[Prompt]] = TypeAdapter(list[Prompt])
+            return adapter.validate_json(fp.read())
+
+    except ValidationError:
+        pass
 
 
 def main() -> None:
-    model = Model() 
-    functions_definition = get_functions_definition()
+    model: Model = Model()
+    args: Namespace = get_args()
+    
 
-    Generator(
+    _ = Generator(
             model=model,
-            trie=create_prefixtrie([model.encode_string(fun.name)
-                                    for fun in functions_definition]),
-            prompts=get_prompts(),
-            functions_definition=get_functions_definition()
-            ).run()
+            trie=PrefixTrie(),
+            functions_definition=get_functionsdefinition(
+                path=Path(cast(str, args.functions_definition))),
+            prompts=None
+                ).run()
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except CallError as e:
-        e.print()
+    main()
 

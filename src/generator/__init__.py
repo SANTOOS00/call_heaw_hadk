@@ -28,6 +28,7 @@ class Generator:
                 model=model
                 )
 
+        
     def run(self) -> None:
         generator_name: FunctionName= self._generator_function_name
         generator_parameters: GeneratorParameters= self._generator_parameters
@@ -39,17 +40,19 @@ class Generator:
             fun_def: FunctionDefinition | None= self.get_function_definition(
                     function_name=fun_name)
             if fun_def is None:
-                print(f"[ERROR]: No tool definition matches the "
+                print("[ERROR]: No tool definition matches the "
                       f"user prompt '{prompt.prompt}'", file=sys.stderr)
                 sys.exit(1)
-            print(fun_name)
-            parameters: Parameters = generator_parameters.generator(function_definition=fun_def,
-                                                                    user_prompt=prompt.prompt)
-            import json 
-            with open('file.json', 'w') as fb:
-                json.dump(parameters, fb)
-    def _get_doc(self, functions_definition: list[FunctionDefinition]) -> FunctionDoc:
-        return [{"name": fun.name, "description": fun.description} for fun in functions_definition]
+            parameters: Parameters = generator_parameters.generator(
+                    function_definition=fun_def,
+                    user_prompt=prompt.prompt)
+    
+    def _get_doc(
+            self,
+            functions_definition: list[FunctionDefinition]
+            ) -> list[FunctionDoc]:
+        return [{"name": fun.name, "description": fun.description}
+                for fun in functions_definition]
 
     def get_function_definition(
             self,

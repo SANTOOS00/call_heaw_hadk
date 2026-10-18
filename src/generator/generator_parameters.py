@@ -1,13 +1,12 @@
 from .dataschema import FunctionDefinition 
 from ..model import Model
-from typing import NewType, TypeAlias
+from typing import TypeAlias
 import numpy as nu
-from enum import Enum, auto
+from enum import Enum
 
 
-Parameters: NewType = NewType('PARAMETERS',
-                     dict[str, int | float | str | bool])
-TokenID: NewType = int
+Parameters: TypeAlias = dict[str, int | float | str | bool]
+TokenID: TypeAlias = int
 Score: TypeAlias = float
 
 
@@ -102,12 +101,14 @@ class FSM:
                 case self.StateString.START:
                     if ch == '\\':
                         print('ssssss')
-                        state = sefl.StateString.ESCAPE
+                        state = self.StateString.ESCAPE
                     elif ch == '"':
                         state = self.StateString.CONTEXT
                 case self.StateString.CONTEXT:
                     if ch == '"':
                         return self.StateString.END
+                case _:
+                    ...
         return state
 
 
@@ -116,14 +117,14 @@ class FSM:
 
 class GeneratorParameters:
     def __init__(self, model: Model)-> None:
-        self._model = model
+        self._model: Model = model
         self._fsm: FSM = FSM()
-        self._context_window: list[ToeknID]
+        self._context_window: list[TokenID]
 
     def generator(self,
                   function_definition: FunctionDefinition,
                   user_prompt: str) -> Parameters:
-        parameters: Paramerts = {}
+        parameters: Parameters = dict()
         model = self._model
         prompt: str = Prompt.builder_prompt(
                 user_prompt=user_prompt,
@@ -131,7 +132,7 @@ class GeneratorParameters:
         self._context_window = model.encode_string(
                 string=prompt
                 )
-        for count, (parameter, typearg) in enumerate(function_definition.parameters.items()):
+        for parameter, typearg in function_definition.parameters.items():
             self._set_token_name_arg(
                     parameter=parameter,
                     number_parameters=len(function_definition.parameters)
@@ -145,6 +146,8 @@ class GeneratorParameters:
                     parameters[parameter] = self._string()
                 case "boolean":
                     parameters[parameter] = self._boolean()
+                case _:
+                    ...
             print(parameters)
         return parameters
     def _string(self) -> str:
@@ -187,7 +190,7 @@ class GeneratorParameters:
                     token_possible=token_possible,
                     window_context=self._context_window
                     )
-            token: TokenID = nu.argmax(logits)
+            token: TokenID = TokenID(nu.argmax(logits))
             self._add_token_in_window_context(
                     token_id=token
                     )
@@ -231,7 +234,6 @@ class GeneratorParameters:
                 return self._model.encode_char_char("0123456789")
             case FSM.StateNumber.END:
                 return None
-        return None
 
-__all__ = ["GeneratorParameters", "Paramters"]
+__all__ = ["GeneratorParameters", "Parameters"]
 
