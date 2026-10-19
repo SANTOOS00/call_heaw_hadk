@@ -1,4 +1,3 @@
-
 from pathlib import Path
 from argparse import ArgumentParser, Namespace
 
@@ -35,3 +34,4 @@ def get_args() -> Namespace:
     return parser.parse_args()
 
 __all__ = ["get_args"]
+

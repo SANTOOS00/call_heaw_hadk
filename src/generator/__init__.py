@@ -28,7 +28,6 @@ class Generator:
                 model=model
                 )
 
-        
     def run(self) -> None:
         generator_name: FunctionName= self._generator_function_name
         generator_parameters: GeneratorParameters= self._generator_parameters

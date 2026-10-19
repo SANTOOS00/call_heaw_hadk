@@ -22,7 +22,7 @@ def valid_path(arg_path: str) -> None:
         raise ParserError(
                 f"[ERROR]: path is not valid {arg_path}"
                 )
-
+    return path
 
 def get_args() -> Namespace:
     parser = ArgumentParser()
@@ -57,7 +57,7 @@ def get_functionsdefinition(
 def get_prompts(
         path: Path
         ) -> list[Prompt]:
-    try:  
+    try: 
         with path.open() as fp:
             adapter: TypeAdapter[list[Prompt]] = TypeAdapter(list[Prompt])
             return adapter.validate_json(fp.read())
@@ -75,12 +75,12 @@ def main() -> None:
     _ = Generator(
             model=model,
             prompts=get_prompts(
-                path=Path(cast(str, args.ouput))
+                path=Path(args.output)
                 ),
             functions_definition= get_functionsdefinition(
-                    path=Path(cast(str, args.functions_definition)
-                              )),
-                ).run()
+                path=Path(args.functions_definition)
+                )
+            ).run()
 
 
 if __name__ == "__main__":

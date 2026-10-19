@@ -1,6 +1,8 @@
 from .dataschema import FunctionDefinition 
 from ..model import Model
-from typing import TypeAlias
+
+
+from typing import TypeAlias, cast
 import numpy as nu
 from enum import Enum
 
@@ -113,7 +115,8 @@ class FSM:
 
 
     def get_step_boolean(self) -> bool:
-        pass
+       pass
+
 
 class GeneratorParameters:
     def __init__(self, model: Model)-> None:
@@ -150,6 +153,7 @@ class GeneratorParameters:
                     ...
             print(parameters)
         return parameters
+
     def _string(self) -> str:
         model: Model = self._model
         tokens_generator: list[TokenID] = []
@@ -158,7 +162,7 @@ class GeneratorParameters:
             logits: list[Score] = model.get_logits_from_input_ids(self._context_window)
             token: TokenID = TokenID(nu.argmax(logits))
             tokens_generator.append(token)
-            self._add_token_in_window_context(token)
+            _ = self._add_token_in_window_context(token)
             tokens_string: str = model.decode(tokens_generator)
             state: FSM.StateString = fsm.get_state_string(
                     string=tokens_string
@@ -173,13 +177,21 @@ class GeneratorParameters:
                 break
         return tokens_string
 
-    def boolean(self) -> bool:
-       pass
+    def _boolean(self) -> bool:
+       model: Model = self._model
+       token_possible: list[Score] = model.mask_logits(
+               token_possible=model.encode_string("TrueFalse"),
+               window_context=self._context_window
+               )
+       token_id: TokenID = TokenID(nu.argmax(token_possible))
+       _ = self._add_token_in_window_context(
+               token_id=token_id
+               )
+       return model.decode([token_id]) == 'True'
 
     def _number(self) -> float:
         model: Model = self._model
         tokens_generator: list[TokenID] = []
-        fsm: FSM = self._fsm
         while True:
             token_possible: list[int] | None = self._get_token_possible_for_number(
                     number=self._model.decode(tokens_generator)
