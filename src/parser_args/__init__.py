@@ -1,37 +1,47 @@
 from pathlib import Path
-from argparse import ArgumentParser, Namespace
 
-
-class ParserError(Exception):
+class _ParserError(Exception):
     ...
 
-
-def valid_path(arg_path: str) -> Path:
-    path: Path = Path(arg_path)
-    if path.exists():
-        raise ParserError(
-                f"[ERROR]: path is not valid {arg_path}"
+class Parser:
+    def __init__(self, args: list[str]) -> None:
+        self.functions_definition: Path = Path(
+                "data/input/functions_definition.json"
                 )
-    return path
+        self.output: Path = Path( 
+                "data/output/function_calls.json"
+                )
+        self.input: Path = Path(
+                "data/input/function_calling_tests.json"
+                )
+        _ = self._set_paths(
+                args=args
+                )
+
+    def _set_paths(self, args: list[str]) -> None:
+        for i, arg in enumerate(args, start=1):
+            if len(args) > i and i % 2 != 0:
+                match arg:
+                    case "--functions_definition":
+                        self.functions_definition = self._set_path(
+                                path_arg=args[args.index(arg) + 1]
+                                )
+                    case "--input":
+                        self.input = self._set_path(
+                                path_arg=args[args.index(arg) + 1]
+                                )
+                    case "--output":
+                        self.output = self._set_path(
+                                path_arg=args[args.index(arg) + 1]
+                                )
+                    case _:
+                        raise _ParserError(
+                                "[Error]: Unknown argument: {arg}"
+                                )
+
+    def _set_path(self, path_arg: str) ->  Path:
+        return Path(path_arg) 
 
 
-def get_args() -> Namespace:
-    parser = ArgumentParser()
-
-    _ = parser.add_argument(
-            "--functions_definition",
-            type=valid_path,
-            )
-    _ = parser.add_argument(
-            "--input",
-            type=valid_path,
-            )
-    _ = parser.add_argument(
-            "--output",
-            type=valid_path,
-            help="hello in not valid for valu"
-            )
-    return parser.parse_args()
-
-__all__ = ["get_args"]
+__all__ = ["Parser"]
 
