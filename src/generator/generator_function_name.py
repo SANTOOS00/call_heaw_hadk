@@ -10,6 +10,7 @@ import numpy as nu
 FunctionNameStr: TypeAlias = str
 TokenID: TypeAlias = int
 
+
 FunctionDoc:  TypeAlias = dict[str, str]
 Score: TypeAlias = float
 
@@ -28,12 +29,16 @@ FUNCTION NAME:"""
             user_prompt: str,
             functions_doc: list[FunctionDoc]
             ) -> str:
-        return Prompt.Prompt_Function_Name\
-                .value.replace(
-                "{USER_PROMPT}", user_prompt
+        return Prompt.Prompt_Function_Name.value\
+                .replace(
+                        "{USER_PROMPT}", user_prompt
                 ).replace(
-                        "{FUNCTION_DOC}","\n".join([f"{fun}" for fun in functions_doc])
+                        "{FUNCTION_DOC}", "\n".join([
+                            f"{fun}" for
+                            fun in functions_doc
+                            ])
                 )
+
 
 class FunctionName:
     def __init__(self,
@@ -54,7 +59,9 @@ class FunctionName:
         context_window: list[TokenID] = model.encode_string(prompt)
         token_valid: list[TokenID] = []
         while True:
-            tokens_possible: list[TokenID] = self._trie.git_childrens(token_valid)
+            tokens_possible: list[TokenID] = self._trie.git_childrens(
+                    token_valid
+                    )
             if len(tokens_possible) == 0:
                 break
             logits: list[Score] = model.mask_logits(
@@ -66,5 +73,5 @@ class FunctionName:
 
         return model.decode(token_valid)
 
-__all__ = ["FunctionName", "FunctionNameStr", "FunctionDoc"]
 
+__all__ = ["FunctionName", "FunctionNameStr", "FunctionDoc"]

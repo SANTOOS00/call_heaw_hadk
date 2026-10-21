@@ -1,14 +1,16 @@
 from pathlib import Path
 
+
 class _ParserError(Exception):
     ...
+
 
 class Parser:
     def __init__(self, args: list[str]) -> None:
         self.functions_definition: Path = Path(
                 "data/input/functions_definition.json"
                 )
-        self.output: Path = Path( 
+        self.output: Path = Path(
                 "data/output/function_calls.json"
                 )
         self.input: Path = Path(
@@ -39,9 +41,8 @@ class Parser:
                                 "[Error]: Unknown argument: {arg}"
                                 )
 
-    def _set_path(self, path_arg: str) ->  Path:
-        return Path(path_arg) 
+    def _set_path(self, path_arg: str) -> Path:
+        return Path(path_arg)
 
 
 __all__ = ["Parser"]
-

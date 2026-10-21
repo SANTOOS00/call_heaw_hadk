@@ -1,14 +1,13 @@
-from typing import NewType, Self
+from typing import TypeAlias, Self
 
 
-FunctionName = NewType('FunctionName', str)
+FunctionName: TypeAlias =  str
 
 
 class Node:
     def __init__(self) -> None:
         self.node: dict[int, Node] = dict()
         self.is_finished: bool = False
-
 
 class PrefixTrie:
     def __init__(self) -> None:
@@ -42,4 +41,3 @@ class PrefixTrie:
 
 
 __all__ = ["PrefixTrie"]
-

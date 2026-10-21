@@ -1,25 +1,23 @@
 from .generator import Generator, FunctionDefinition, Prompt
+from .generator.dataschema import AdapterFunctionDefinition, AdapterPrompt
 from .model import Model
 from .parser_args import Parser
 
 
 import sys
-from pydantic import TypeAdapter, ValidationError
+from pydantic import ValidationError
 from pathlib import Path
-
-
-AdapterFunctionDefinition = TypeAdapter(list[FunctionDefinition])
-AdapterPrompt = TypeAdapter(list[Prompt])
 
 
 class ParserError(Exception):
     ...
 
+
 def get_functionsdefinition(
         path: Path,
         ) -> list[FunctionDefinition]:
     try:
-        with path.open() as fp:   
+        with path.open() as fp:
             return AdapterFunctionDefinition.validate_json(fp.read())
     except ValidationError:
         raise ParserError(
@@ -30,29 +28,27 @@ def get_functionsdefinition(
                 "[ERROR]: Failed to read functions definition file."
                 )
 
+
 def get_prompts(
         path: Path
         ) -> list[Prompt]:
-    try: 
-        with path.open("r") as fp:
-            adapter: TypeAdapter[list[Prompt]] = TypeAdapter(list[Prompt])
-            return adapter.validate_json(fp.read())
-
+    try:
+        with path.open() as fp:
+            return AdapterPrompt.validate_json(fp.read())
     except ValidationError:
         raise ParserError(
                 "[ERROR]: Invalid JSON structure for prompts."
                 )
-    except Exception as s:
-        print(s)
+    except Exception:
         raise ParserError(
                 "[ERROR]: Failed to read prompts file."
                 )
+
 
 def main() -> None:
     args: Parser = Parser(
             args=sys.argv[1:]
             )
-    print(args.input)
     model: Model = Model()
     _ = Generator(
             model=model,
@@ -66,5 +62,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
-
+    try:
+        main()
+    except Exception as e:
+        print(e)

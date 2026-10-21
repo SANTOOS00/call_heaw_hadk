@@ -1,8 +1,9 @@
-from .dataschema import FunctionDefinition, Prompt
+from .dataschema import FunctionDefinition, Prompt, FunctionCalling
 from ..prefixtrie import PrefixTrie
 from .generator_function_name import FunctionName, FunctionNameStr, FunctionDoc
 from .generator_parameters import GeneratorParameters, Parameters
 from ..model import Model
+
 
 import sys
 
@@ -16,36 +17,41 @@ class Generator:
     ) -> None:
 
         self.prompts: list[Prompt] = prompts
-        self.functions_definition: list[FunctionDefinition] = functions_definition
+        self.functions_definition: list[
+                FunctionDefinition
+                ] = functions_definition
         self._generator_function_name: FunctionName = FunctionName(
                 model=model,
                 trie=PrefixTrie.insert_many(
-                    [model.encode_string(fun.name) for fun in functions_definition]
+                    [
+                        model.encode_string(fun.name)
+                        for fun in functions_definition
+                        ]
                     ),
                 functions_doc=self._get_doc(functions_definition)
                 )
         self._generator_parameters: GeneratorParameters = GeneratorParameters(
                 model=model
                 )
+        self._function_calling: list[FunctionCalling] = []
 
     def run(self) -> None:
-        generator_name: FunctionName= self._generator_function_name
-        generator_parameters: GeneratorParameters= self._generator_parameters
+        generator_name: FunctionName = self._generator_function_name
+        generator_parameters: GeneratorParameters = self._generator_parameters
 
         for prompt in self.prompts:
             fun_name: FunctionNameStr = generator_name.generator(
                     user_prompt=prompt.prompt
                     )
-            fun_def: FunctionDefinition | None= self.get_function_definition(
+            fun_def: FunctionDefinition | None = self._get_function_definition(
                     function_name=fun_name)
             if fun_def is None:
-                print('[ERROR]: No tool definition matches the '
-                      f'user prompt "{prompt.prompt}"', file=sys.stderr)
+                print("[ERROR]: No tool definition matches the " +
+                      f"user prompt '{prompt.prompt}'", file=sys.stderr)
                 sys.exit(1)
             parameters: Parameters = generator_parameters.generator(
                     function_definition=fun_def,
                     user_prompt=prompt.prompt)
-            print(parameters)
 
     def _get_doc(
             self,
@@ -54,7 +60,7 @@ class Generator:
         return [{"name": fun.name, "description": fun.description}
                 for fun in functions_definition]
 
-    def get_function_definition(
+    def _get_function_definition(
             self,
             function_name: FunctionNameStr
             ) -> FunctionDefinition | None:
@@ -63,6 +69,8 @@ class Generator:
                 return function
         return None
 
+    def _add_function_calling(self, function_calling: FunctionCalling) -> None:
+        self._function_calling.append(function_calling)
+
 
 __all__ = ["Generator", "FunctionDefinition", "Prompt"]
-

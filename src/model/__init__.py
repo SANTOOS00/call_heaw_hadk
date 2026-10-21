@@ -1,9 +1,11 @@
 from llm_sdk import Small_LLM_Model
 
+
 from typing import TypeAlias
 
 
 TokenID: TypeAlias = int
+
 
 class Model(Small_LLM_Model):
     def encode_string(self, string: str) -> list[int]:
@@ -29,4 +31,3 @@ class Model(Small_LLM_Model):
 
 
 __all__ = ["Model"]
-

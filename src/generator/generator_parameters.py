@@ -2,7 +2,7 @@ from .dataschema import FunctionDefinition
 from ..model import Model
 
 
-from typing import TypeAlias, cast
+from typing import TypeAlias
 import numpy as nu
 from enum import Enum
 
@@ -32,7 +32,7 @@ class Prompt(str, Enum):
         "parameters": {
             "name": "john",
             }
-    } 
+    }
     output:
     {
         "prototype": "{PROTOTYPE}",
@@ -42,9 +42,14 @@ class Prompt(str, Enum):
             """
 
     @staticmethod
-    def builder_prompt(user_prompt: str, function_definition: FunctionDefinition) -> str:
+    def builder_prompt(
+            user_prompt: str,
+            function_definition: FunctionDefinition
+            ) -> str:
         prototype: str = '('
-        for conut, (parameter, typearg) in enumerate(function_definition.parameters.items()):
+        for conut, (parameter, typearg) in enumerate(
+                function_definition.parameters.items()
+                ):
             prototype += f"\"{parameter}\": {typearg.type}"
             if len(function_definition.parameters) > conut:
                 prototype += ','
@@ -56,6 +61,7 @@ class Prompt(str, Enum):
         ).replace(
                 "{PROTOTYPE}", function_definition.name + prototype
         )
+
 
 class FSM:
     class StateNumber(Enum):
@@ -114,15 +120,11 @@ class FSM:
         return state
 
 
-    def get_step_boolean(self) -> bool:
-       pass
-
-
 class GeneratorParameters:
-    def __init__(self, model: Model)-> None:
+    def __init__(self, model: Model) -> None:
         self._model: Model = model
         self._fsm: FSM = FSM()
-        self._context_window: list[TokenID]
+        self._context_window: list[TokenID] = []
 
     def generator(self,
                   function_definition: FunctionDefinition,
@@ -149,9 +151,6 @@ class GeneratorParameters:
                     parameters[parameter] = self._string()
                 case "boolean":
                     parameters[parameter] = self._boolean()
-                case _:
-                    ...
-            print(parameters)
         return parameters
 
     def _string(self) -> str:
@@ -159,15 +158,16 @@ class GeneratorParameters:
         tokens_generator: list[TokenID] = []
         fsm: FSM = self._fsm
         while True:
-            logits: list[Score] = model.get_logits_from_input_ids(self._context_window)
+            logits: list[Score] = model.get_logits_from_input_ids(
+                    self._context_window
+                    )
             token: TokenID = TokenID(nu.argmax(logits))
             tokens_generator.append(token)
             _ = self._add_token_in_window_context(token)
             tokens_string: str = model.decode(tokens_generator)
             state: FSM.StateString = fsm.get_state_string(
                     string=tokens_string
-                    )
-            
+                    ) 
             if FSM.StateString.END == state:
                 if '"' in tokens_string:
                     index = tokens_string.index('"')
