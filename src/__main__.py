@@ -53,11 +53,9 @@ def main() -> None:
         model: Model = Model(
                 model_name=args.model_name
                 )
-    except Exception:
+    except Exception as e:
         print(
-            "[ERROR]: The model name you provided " +
-            "might not be compatible with the avai" +
-            "lable Hugging Face model version.",
+            f"[ERROR]: {e}",
             file=sys.stderr
         )
         sys.exit(1)
