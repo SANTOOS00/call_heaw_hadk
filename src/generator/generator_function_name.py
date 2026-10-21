@@ -57,10 +57,10 @@ class FunctionName:
                 user_prompt=user_prompt,
                 functions_doc=self._function_doc)
         context_window: list[TokenID] = model.encode_string(prompt)
-        token_valid: list[TokenID] = []
+        tokens: list[TokenID] = []
         while True:
-            tokens_possible: list[TokenID] = self._trie.git_childrens(
-                    token_valid
+            tokens_possible: list[TokenID] =self._trie.get_childrens(
+                    tokens=tokens
                     )
             if len(tokens_possible) == 0:
                 break
@@ -68,10 +68,13 @@ class FunctionName:
                     tokens_possible, context_window
                     )
             token: TokenID = TokenID(nu.argmax(logits))
-            token_valid.append(token)
+            tokens.append(token)
             context_window.append(token)
-
-        return model.decode(token_valid)
+            if self._trie.search(
+                    token_ids=tokens
+                    ):
+                break
+        return model.decode(tokens)
 
 
 __all__ = ["FunctionName", "FunctionNameStr", "FunctionDoc"]

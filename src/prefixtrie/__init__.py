@@ -9,6 +9,7 @@ class Node:
         self.node: dict[int, Node] = dict()
         self.is_finished: bool = False
 
+
 class PrefixTrie:
     def __init__(self) -> None:
         self._root_node: Node = Node()
@@ -21,9 +22,8 @@ class PrefixTrie:
             root_node = root_node.node[id_token]
         root_node.is_finished = True
 
-    def git_childrens(self, tokens: list[int]) -> list[int]:
-        root_node = self._root_node
-
+    def get_childrens(self, tokens: list[int]) -> list[int]:
+        root_node: Node = self._root_node
         for id_token in tokens:
             if id_token not in root_node.node.keys():
                 return []
@@ -32,12 +32,20 @@ class PrefixTrie:
 
     @classmethod
     def insert_many(cls, tokens_ids: list[list[int]]) -> Self:
-        instance = cls()
+        instance: PrefixTrie = cls()
         for ids in tokens_ids:
             instance._insert(
                     token_ids=ids
                     )
         return instance
+
+    def search(self, token_ids: list[int]) -> bool:
+        root_node: Node = self._root_node
+        for id in token_ids:
+            if id not in root_node.node.keys():
+                return False
+            root_node = root_node.node[id]
+        return root_node.is_finished
 
 
 __all__ = ["PrefixTrie"]

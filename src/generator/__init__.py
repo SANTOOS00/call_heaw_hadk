@@ -22,11 +22,8 @@ class Generator:
                 ] = functions_definition
         self._generator_function_name: FunctionName = FunctionName(
                 model=model,
-                trie=PrefixTrie.insert_many(
-                    [
-                        model.encode_string(fun.name)
-                        for fun in functions_definition
-                        ]
+                trie=self._init_trie(
+                    model=model
                     ),
                 functions_doc=self._get_doc(functions_definition)
                 )
@@ -52,6 +49,7 @@ class Generator:
             parameters: Parameters = generator_parameters.generator(
                     function_definition=fun_def,
                     user_prompt=prompt.prompt)
+            print(parameters)
 
     def _get_doc(
             self,
@@ -71,6 +69,12 @@ class Generator:
 
     def _add_function_calling(self, function_calling: FunctionCalling) -> None:
         self._function_calling.append(function_calling)
+
+    def _init_trie(self, model: Model) -> PrefixTrie:
+        return PrefixTrie.insert_many([
+            model.encode_string(fun.name) + model.encode_string('"')
+            for fun in self.functions_definition
+                ])
 
 
 __all__ = ["Generator", "FunctionDefinition", "Prompt"]

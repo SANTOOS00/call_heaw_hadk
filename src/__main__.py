@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from pathlib import Path
 
 
-class ParserError(Exception):
+class _ParserError(Exception):
     ...
 
 
@@ -20,11 +20,11 @@ def get_functionsdefinition(
         with path.open() as fp:
             return AdapterFunctionDefinition.validate_json(fp.read())
     except ValidationError:
-        raise ParserError(
+        raise _ParserError(
                 "[ERROR]: Invalid JSON structure for functions definition."
                 )
     except Exception:
-        raise ParserError(
+        raise _ParserError(
                 "[ERROR]: Failed to read functions definition file."
                 )
 
@@ -36,11 +36,11 @@ def get_prompts(
         with path.open() as fp:
             return AdapterPrompt.validate_json(fp.read())
     except ValidationError:
-        raise ParserError(
+        raise _ParserError(
                 "[ERROR]: Invalid JSON structure for prompts."
                 )
     except Exception:
-        raise ParserError(
+        raise _ParserError(
                 "[ERROR]: Failed to read prompts file."
                 )
 
