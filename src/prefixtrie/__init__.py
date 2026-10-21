@@ -1,4 +1,4 @@
-from typing import TypeAlias, Self
+from typing import TypeAlias
 
 
 FunctionName: TypeAlias = str
@@ -21,6 +21,7 @@ class PrefixTrie:
                 root_node.node[id_token] = Node()
             root_node = root_node.node[id_token]
         root_node.is_finished = True
+        return None
 
     def get_childrens(self, tokens: list[int]) -> list[int]:
         root_node: Node = self._root_node
@@ -31,7 +32,7 @@ class PrefixTrie:
         return list(root_node.node.keys())
 
     @classmethod
-    def insert_many(cls, tokens_ids: list[list[int]]) -> Self:
+    def insert_many(cls, tokens_ids: list[list[int]]) -> "PrefixTrie":
         instance: PrefixTrie = cls()
         for ids in tokens_ids:
             instance._insert(

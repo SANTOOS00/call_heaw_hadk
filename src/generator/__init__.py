@@ -32,11 +32,9 @@ class Generator:
                 )
         self._functions_calling: list[FunctionCalling] = []
 
-    def run(self) -> None:
+    def run(self) -> list[FunctionCalling]:
         generator_name: FunctionName = self._generator_function_name
         generator_parameters: GeneratorParameters = self._generator_parameters
-        function_name: FunctionDefinition
-        func_def: FunctionDefinition
 
         for prompt in self.prompts:
             function_name: FunctionNameStr = generator_name.generator(
@@ -87,7 +85,7 @@ class Generator:
                 name=function_definition.name,
                 parameters=parameters
                 )
-        _ = self._add_function_calling(
+        self._add_function_calling(
                 function_calling=function_calling
                 )
 

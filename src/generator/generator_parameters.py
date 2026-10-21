@@ -4,7 +4,7 @@ from ..model import Model
 
 from typing import TypeAlias
 import numpy as nu
-from enum import Enum
+from enum import Enum, auto
 
 
 Parameters: TypeAlias = dict[str, int | float | str | bool]
@@ -65,17 +65,17 @@ class Prompt(str, Enum):
 
 class FSM:
     class StateNumber(Enum):
-        START = "Start Cell"
-        SIGN = "Sign Cell"
-        DECIMAL = "Decimal Cell"
-        FRACTIONAL = "Fractional Cell"
-        END = "End Part"
+        START = auto()
+        SIGN = auto()
+        DECIMAL = auto()
+        FRACTIONAL = auto()
+        END = auto()
 
     class StateString(Enum):
-        START = "Start Cell"
-        ESCAPE = "Escape Cell"
-        CONTEXT = "Context Cell"
-        END = "End Cell"
+        START = auto()
+        ESCAPE = auto()
+        CONTEXT = auto()
+        END = auto()
 
     def get_state_number(self, number: str) -> StateNumber:
         state: FSM.StateNumber = self.StateNumber.START
@@ -163,7 +163,7 @@ class GeneratorParameters:
                     )
             token: TokenID = TokenID(nu.argmax(logits))
             tokens_generator.append(token)
-            _ = self._add_token_in_window_context(token)
+            self._add_token_in_window_context(token)
             tokens_string: str = model.decode(tokens_generator)
             state: FSM.StateString = fsm.get_state_string(
                     string=tokens_string
@@ -184,10 +184,10 @@ class GeneratorParameters:
                 window_context=self._context_window
                 )
         token_id: TokenID = TokenID(nu.argmax(token_possible))
-        _ = self._add_token_in_window_context(
+        self._add_token_in_window_context(
                 token_id=token_id
                 )
-        return model.decode([token_id]) == 'True'
+        return str(model.decode([token_id])) == 'True'
 
     def _number(self) -> float:
         model: Model = self._model

@@ -74,7 +74,7 @@ class FunctionName:
                     token_ids=tokens
                     ):
                 break
-        return model.decode(tokens[:-1])
+        return str(model.decode(tokens[:-1]))
 
 
 __all__ = ["FunctionName", "FunctionNameStr", "FunctionDoc"]

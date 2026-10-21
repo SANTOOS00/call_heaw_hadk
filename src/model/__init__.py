@@ -1,4 +1,4 @@
-from llm_sdk import Small_LLM_Model
+from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
 
 
 from typing import TypeAlias

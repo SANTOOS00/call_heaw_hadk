@@ -18,7 +18,7 @@ class Parser:
                 )
         self.model_name: str = "Qwen/Qwen3-0.6B"
 
-        _ = self._set_paths(
+        self._set_paths(
                 args=args
                 )
 
@@ -44,6 +44,7 @@ class Parser:
                         raise _ParserError(
                                 "[Error]: Unknown argument: {arg}"
                                 )
+        return None
 
     def _set_path(self, path_arg: str) -> Path:
         return Path(path_arg)

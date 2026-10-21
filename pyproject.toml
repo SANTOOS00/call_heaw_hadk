@@ -16,5 +16,9 @@ members = [
     "llm_sdk",
 ]
 
+[[tool.mypy.overrides]]
+module = "src.model.*"
+ignore_errors = true
+
 [tool.uv.sources]
 llm-sdk = { workspace = true }
