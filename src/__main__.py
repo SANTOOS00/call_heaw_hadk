@@ -49,8 +49,20 @@ def main() -> None:
     args: Parser = Parser(
             args=sys.argv[1:]
             )
-    model: Model = Model()
-    _ = Generator(
+    try:
+        model: Model = Model(
+                model_name=args.model_name
+                )
+    except Exception:
+        print(
+            "[ERROR]: The model name you provided " +
+            "might not be compatible with the avai" +
+            "lable Hugging Face model version.",
+            file=sys.stderr
+        )
+        sys.exit(1)
+
+    generator = Generator(
             model=model,
             prompts=get_prompts(
                 path=args.input
@@ -59,10 +71,8 @@ def main() -> None:
                 path=args.functions_definition
                 ),
             ).run()
+    print(generator)
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(e)
+    main()

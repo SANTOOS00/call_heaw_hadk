@@ -59,7 +59,7 @@ class FunctionName:
         context_window: list[TokenID] = model.encode_string(prompt)
         tokens: list[TokenID] = []
         while True:
-            tokens_possible: list[TokenID] =self._trie.get_childrens(
+            tokens_possible: list[TokenID] = self._trie.get_childrens(
                     tokens=tokens
                     )
             if len(tokens_possible) == 0:

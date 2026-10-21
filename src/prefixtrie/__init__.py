@@ -1,7 +1,7 @@
 from typing import TypeAlias, Self
 
 
-FunctionName: TypeAlias =  str
+FunctionName: TypeAlias = str
 
 
 class Node:
@@ -40,7 +40,6 @@ class PrefixTrie:
         return instance
 
     def search(self, token_ids: list[int]) -> bool:
-        print(token_ids)
         root_node: Node = self._root_node
         for id in token_ids:
             if id not in root_node.node.keys():

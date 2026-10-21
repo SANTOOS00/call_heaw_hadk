@@ -5,9 +5,15 @@ from typing import TypeAlias
 
 
 TokenID: TypeAlias = int
+ModelName: TypeAlias = str
 
 
 class Model(Small_LLM_Model):
+    def __init__(self,
+                 model_name: ModelName = "Qwen/Qwen3-0.6B",
+                 ) -> None:
+        super().__init__(model_name=model_name)
+
     def encode_string(self, string: str) -> list[int]:
         return [int(token_id) for token_id in super().encode(string)[0]]
 

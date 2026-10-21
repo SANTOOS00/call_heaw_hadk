@@ -1,4 +1,4 @@
-from .dataschema import FunctionDefinition 
+from .dataschema import FunctionDefinition
 from ..model import Model
 
 
@@ -167,7 +167,7 @@ class GeneratorParameters:
             tokens_string: str = model.decode(tokens_generator)
             state: FSM.StateString = fsm.get_state_string(
                     string=tokens_string
-                    ) 
+                    )
             if FSM.StateString.END == state:
                 if '"' in tokens_string:
                     index = tokens_string.index('"')
@@ -178,26 +178,26 @@ class GeneratorParameters:
         return tokens_string
 
     def _boolean(self) -> bool:
-       model: Model = self._model
-       token_possible: list[Score] = model.mask_logits(
-               token_possible=model.encode_string("TrueFalse"),
-               window_context=self._context_window
-               )
-       token_id: TokenID = TokenID(nu.argmax(token_possible))
-       _ = self._add_token_in_window_context(
-               token_id=token_id
-               )
-       return model.decode([token_id]) == 'True'
+        model: Model = self._model
+        token_possible: list[Score] = model.mask_logits(
+                token_possible=model.encode_string("TrueFalse"),
+                window_context=self._context_window
+                )
+        token_id: TokenID = TokenID(nu.argmax(token_possible))
+        _ = self._add_token_in_window_context(
+                token_id=token_id
+                )
+        return model.decode([token_id]) == 'True'
 
     def _number(self) -> float:
         model: Model = self._model
         tokens_generator: list[TokenID] = []
         while True:
-            token_possible: list[int] | None = self._get_token_possible_for_number(
+            token_possible: list[int] = self._get_token_possible_for_number(
                     number=self._model.decode(tokens_generator)
                     )
-            if token_possible is None:
-               break 
+            if len(token_possible) == 0:
+                break
             logits: list[Score] = model.mask_logits(
                     token_possible=token_possible,
                     window_context=self._context_window
@@ -213,24 +213,25 @@ class GeneratorParameters:
     def _add_token_in_window_context(
             self,
             token_id: TokenID
-            ) -> None: 
-        self._context_window.append(token_id)
-    
-    def _set_token_name_arg(
-            self,    
-            parameter: str,
-            number_parameters: int
             ) -> None:
-            if number_parameters == 0:
-                self._context_window += self._model.encode_string( 
-                        f"\"{parameter}\": "
-                        )        
-            else:
-                self._context_window += self._model.encode_string(
-                        f" \"{parameter}\": " 
-                        )
+        self._context_window.append(token_id)
 
-    def _get_token_possible_for_number(self, number: str) -> list[int] | None:
+    def _set_token_name_arg(
+            self,
+            parameter: str,
+            number_parameters: int) -> None:
+        if number_parameters == 0:
+            self._context_window += self._model.encode_string(
+                    f"\"{parameter}\": "
+                    )
+        else:
+            self._context_window += self._model.encode_string(
+                    f" \"{parameter}\": "
+                    )
+
+    def _get_token_possible_for_number(self,
+                                       number: str
+                                       ) -> list[int]:
         fsm: FSM = self._fsm
         state: FSM.StateNumber = fsm.get_state_number(
                 number=number
@@ -245,7 +246,7 @@ class GeneratorParameters:
             case FSM.StateNumber.SIGN:
                 return self._model.encode_char_char("0123456789")
             case FSM.StateNumber.END:
-                return None
+                return []
+
 
 __all__ = ["GeneratorParameters", "Parameters"]
-
