@@ -14,7 +14,7 @@ class Type(BaseModel):
     Attributes:
         type: Name of the supported primitive type.
     """
-
+    model_config = ConfigDict(extra='forbid')
     type: TypeArgs
 
 
@@ -28,6 +28,7 @@ class FunctionDefinition(BaseModel):
         returns: Type description of the function's return value.
     """
 
+    model_config = ConfigDict(extra='forbid')
     name: str
     description: str
     parameters: dict[str, Type]
@@ -41,6 +42,7 @@ class Prompt(BaseModel):
         prompt: Natural-language request from the user.
     """
 
+    model_config = ConfigDict(extra='forbid')
     prompt: str
 
 
