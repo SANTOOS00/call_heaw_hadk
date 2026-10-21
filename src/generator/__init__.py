@@ -45,8 +45,6 @@ class Generator:
                 )
         self._functions_calling: list[FunctionCalling] = []
 
-        self.textcolor: TextColorPrint = TextColorPrint()
-
     def run(self) -> list[FunctionCalling]:
         """Generate a function call for every configured prompt.
 
@@ -61,7 +59,7 @@ class Generator:
         generator_parameters: GeneratorParameters = self._generator_parameters
 
         for prompt in self.prompts:
-            print(f"user prompt: {prompt.prompt}")
+            print(f"\nuser prompt: {prompt.prompt}")
             function_name: FunctionNameStr = generator_name.generator(
                     user_prompt=prompt.prompt
                     )
@@ -72,12 +70,13 @@ class Generator:
                 print("[ERROR]: No tool definition matches the " +
                       f"user prompt '{prompt.prompt}'", file=sys.stderr)
                 sys.exit(1)
+            print(f"function name: {function_name}")
             parameters: Parameters = generator_parameters.generator(
                     function_definition=func_def,
                     user_prompt=prompt.prompt
                     )
             print(f"parameters: {parameters}")
-            print(f"====== next generator =======\n")
+            print("\n====== next generator =======\n")
             self._set_function_calling(
                     function_definition=func_def,
                     prompt=prompt,

@@ -86,9 +86,13 @@ def main() -> None:
     model, generates function calls, and writes the result to
     standard output.
     """
-    args: Parser = Parser(
-            args=sys.argv[1:]
-            )
+    try:
+        args: Parser = Parser(
+                args=sys.argv[1:]
+                )
+    except Exception as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
     try:
         model: Model = Model(
                 model_name=args.model_name
@@ -121,4 +125,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("ok")

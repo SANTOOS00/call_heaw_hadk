@@ -64,7 +64,7 @@ class Parser:
                         self.model_name = args[args.index(arg) + 1]
                     case _:
                         raise _ParserError(
-                                "[Error]: Unknown argument: {arg}"
+                                f"[Error]: Unknown argument: {arg}"
                                 )
         return None
 

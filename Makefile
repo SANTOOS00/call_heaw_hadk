@@ -1,4 +1,4 @@
- UV ?= uv
+UV ?= uv
 
 PYTHON := $(UV) run python
 

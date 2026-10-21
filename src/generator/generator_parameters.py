@@ -142,11 +142,9 @@ class FSM:
         for ch in string:
             match state:
                 case self.StateString.START:
-                    if ch == '\\':
-                        state = self.StateString.ESCAPE
-                    elif ch == '"':
+                    if ch == '"':
                         state = self.StateString.CONTENT
-                case self.StateString.CONTEXT:
+                case self.StateString.CONTENT:
                     if ch == '"':
                         return self.StateString.END
                 case _:
@@ -166,6 +164,7 @@ class GeneratorParameters:
         self._model: Model = model
         self._fsm: FSM = FSM()
         self._context_window: list[TokenID] = []
+        self.prompt_user: str = ""
 
     def generator(self,
                   function_definition: FunctionDefinition,
@@ -183,10 +182,12 @@ class GeneratorParameters:
         model = self._model
         prompt: str = Prompt.builder_prompt(
                 user_prompt=user_prompt,
-                function_definition=function_definition)
+                function_definition=function_definition
+                )
         self._context_window = model.encode_string(
                 string=prompt
                 )
+        self.prompt_user = user_prompt
         for parameter, typearg in function_definition.parameters.items():
             self._set_token_name_arg(
                     parameter=parameter,
@@ -223,12 +224,16 @@ class GeneratorParameters:
             state: FSM.StateString = fsm.get_state_string(
                     string=tokens_string
                     )
-            if FSM.StateString.END == state:
+            if FSM.StateString.END == state \
+                    or len(tokens_string) > len(self.prompt_user):
                 if '"' in tokens_string:
-                    index = tokens_string.index('"')
-                    tokens_string = tokens_string[index + 1:]
-                    index = tokens_string.index('"')
-                    tokens_string = tokens_string[:index]
+                    try:
+                        index = tokens_string.index('"')
+                        tokens_string = tokens_string[index + 1:]
+                        index = tokens_string.index('"')
+                        tokens_string = tokens_string[:index]
+                    except Exception:
+                        continue
                 break
         return tokens_string
 
