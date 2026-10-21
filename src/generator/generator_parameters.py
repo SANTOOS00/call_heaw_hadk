@@ -91,7 +91,7 @@ class FSM:
 
         START = auto()
         ESCAPE = auto()
-        CONTEXT = auto()
+        CONTENT = auto()
         END = auto()
 
     def get_state_number(self, number: str) -> StateNumber:
@@ -109,8 +109,10 @@ class FSM:
                 case self.StateNumber.START:
                     if ch in "-+":
                         state = self.StateNumber.SIGN
-                    else:
+                    elif ch in "0123456789":
                         state = self.StateNumber.DECIMAL
+                    else:
+                        return self.StateNumber.END
                 case self.StateNumber.SIGN:
                     state = self.StateNumber.DECIMAL
                 case self.StateNumber.DECIMAL:
@@ -141,10 +143,9 @@ class FSM:
             match state:
                 case self.StateString.START:
                     if ch == '\\':
-                        print('ssssss')
                         state = self.StateString.ESCAPE
                     elif ch == '"':
-                        state = self.StateString.CONTEXT
+                        state = self.StateString.CONTENT
                 case self.StateString.CONTEXT:
                     if ch == '"':
                         return self.StateString.END
@@ -322,12 +323,12 @@ class GeneratorParameters:
         match state:
             case FSM.StateNumber.START:
                 return self._model.encode_char_char("+-")
+            case FSM.StateNumber.SIGN:
+                return self._model.encode_char_char("0123456789")
             case FSM.StateNumber.DECIMAL:
                 return self._model.encode_char_char("0123456789.,")
             case FSM.StateNumber.FRACTIONAL:
                 return self._model.encode_char_char("0123456789,")
-            case FSM.StateNumber.SIGN:
-                return self._model.encode_char_char("0123456789")
             case FSM.StateNumber.END:
                 return []
 
