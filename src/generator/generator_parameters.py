@@ -13,6 +13,8 @@ Score: TypeAlias = float
 
 
 class Prompt(str, Enum):
+    """Store templates used to ask the model for function parameters."""
+
     Prompt = """you are a strict function-parameter extractor.
     example:
     {
@@ -46,6 +48,15 @@ class Prompt(str, Enum):
             user_prompt: str,
             function_definition: FunctionDefinition
             ) -> str:
+        """Build a parameter-extraction prompt for a function call.
+
+        Args:
+            user_prompt: Natural-language request supplying parameter values.
+            function_definition: Function whose parameters must be generated.
+
+        Returns:
+            Prompt containing the function prototype, description, and request.
+        """
         prototype: str = '('
         for conut, (parameter, typearg) in enumerate(
                 function_definition.parameters.items()
@@ -64,7 +75,11 @@ class Prompt(str, Enum):
 
 
 class FSM:
+    """Track the lexical state of generated number and string values."""
+
     class StateNumber(Enum):
+        """Represent parsing stages for a numeric value."""
+
         START = auto()
         SIGN = auto()
         DECIMAL = auto()
@@ -72,12 +87,22 @@ class FSM:
         END = auto()
 
     class StateString(Enum):
+        """Represent parsing stages for a quoted string value."""
+
         START = auto()
         ESCAPE = auto()
         CONTEXT = auto()
         END = auto()
 
     def get_state_number(self, number: str) -> StateNumber:
+        """Determine the numeric parsing state for generated text.
+
+        Args:
+            number: Partial numeric value generated so far.
+
+        Returns:
+            State describing which numeric tokens may follow.
+        """
         state: FSM.StateNumber = self.StateNumber.START
         for ch in number:
             match state:
@@ -103,6 +128,14 @@ class FSM:
         return state
 
     def get_state_string(self, string: str) -> StateString:
+        """Determine the string parsing state for generated text.
+
+        Args:
+            string: Partial quoted string generated so far.
+
+        Returns:
+            State describing whether the string is complete.
+        """
         state: FSM.StateString = self.StateString.START
         for ch in string:
             match state:
@@ -121,7 +154,14 @@ class FSM:
 
 
 class GeneratorParameters:
+    """Generate typed function parameters from a user prompt."""
+
     def __init__(self, model: Model) -> None:
+        """Initialize a parameter generator backed by a language model.
+
+        Args:
+            model: Model used to encode prompts and generate parameter tokens.
+        """
         self._model: Model = model
         self._fsm: FSM = FSM()
         self._context_window: list[TokenID] = []
@@ -129,6 +169,15 @@ class GeneratorParameters:
     def generator(self,
                   function_definition: FunctionDefinition,
                   user_prompt: str) -> Parameters:
+        """Generate values for every parameter in a function definition.
+
+        Args:
+            function_definition: Function that declares required parameters.
+            user_prompt: Natural-language request from which to extract values.
+
+        Returns:
+            Mapping of parameter names to generated typed values.
+        """
         parameters: Parameters = dict()
         model = self._model
         prompt: str = Prompt.builder_prompt(
@@ -154,6 +203,11 @@ class GeneratorParameters:
         return parameters
 
     def _string(self) -> str:
+        """Generate a quoted string value and add its tokens to the context.
+
+        Returns:
+            Generated string content without surrounding quotes.
+        """
         model: Model = self._model
         tokens_generator: list[TokenID] = []
         fsm: FSM = self._fsm
@@ -178,6 +232,11 @@ class GeneratorParameters:
         return tokens_string
 
     def _boolean(self) -> bool:
+        """Generate a Boolean value and add its token to the context.
+
+        Returns:
+            ``True`` when the selected token decodes to ``"True"``.
+        """
         model: Model = self._model
         token_possible: list[Score] = model.mask_logits(
                 token_possible=model.encode_string("TrueFalse"),
@@ -190,6 +249,11 @@ class GeneratorParameters:
         return str(model.decode([token_id])) == 'True'
 
     def _number(self) -> float:
+        """Generate a numeric value and add its tokens to the context.
+
+        Returns:
+            Generated number converted to a floating-point value.
+        """
         model: Model = self._model
         tokens_generator: list[TokenID] = []
         while True:
@@ -214,12 +278,23 @@ class GeneratorParameters:
             self,
             token_id: TokenID
             ) -> None:
+        """Append a generated token to the model context window.
+
+        Args:
+            token_id: Generated token identifier to append.
+        """
         self._context_window.append(token_id)
 
     def _set_token_name_arg(
             self,
             parameter: str,
             number_parameters: int) -> None:
+        """Append the serialized name of the next parameter to the context.
+
+        Args:
+            parameter: Name of the parameter being generated.
+            number_parameters: Number of parameters in the function definition.
+        """
         if number_parameters == 0:
             self._context_window += self._model.encode_string(
                     f"\"{parameter}\": "
@@ -232,6 +307,14 @@ class GeneratorParameters:
     def _get_token_possible_for_number(self,
                                        number: str
                                        ) -> list[int]:
+        """Return token identifiers that may legally extend a numeric value.
+
+        Args:
+            number: Partial numeric value generated so far.
+
+        Returns:
+            Allowed next token identifiers, or an empty list when complete.
+        """
         fsm: FSM = self._fsm
         state: FSM.StateNumber = fsm.get_state_number(
                 number=number

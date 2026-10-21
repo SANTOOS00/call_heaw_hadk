@@ -2,11 +2,25 @@ from pathlib import Path
 
 
 class _ParserError(Exception):
+    """Raise when command-line arguments contain an unsupported option."""
+
     ...
 
 
 class Parser:
+    """Parse command-line options for input files,
+    output files, and model choice."""
+
     def __init__(self, args: list[str]) -> None:
+        """Initialize parser defaults and apply
+        supplied command-line arguments.
+
+        Args:
+            args: Alternating command-line option names and their values.
+
+        Raises:
+            _ParserError: If an option name is not recognized.
+        """
         self.functions_definition: Path = Path(
                 "data/input/functions_definition.json"
                 )
@@ -23,6 +37,14 @@ class Parser:
                 )
 
     def _set_paths(self, args: list[str]) -> None:
+        """Update parser settings from alternating option names and values.
+
+        Args:
+            args: Alternating command-line option names and their values.
+
+        Raises:
+            _ParserError: If an option name is not recognized.
+        """
         for i, arg in enumerate(args, start=1):
             if i % 2 != 0:
                 match arg:
@@ -47,6 +69,14 @@ class Parser:
         return None
 
     def _set_path(self, path_arg: str) -> Path:
+        """Convert a command-line path value into a ``Path`` instance.
+
+        Args:
+            path_arg: Path value supplied on the command line.
+
+        Returns:
+            Path representation of the supplied value.
+        """
         return Path(path_arg)
 
 
